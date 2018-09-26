@@ -78,7 +78,7 @@ test_dcim_dir = os.path.join(DATA_DIR, "stage_1_test_images")
 
 
 #convert_all_dcm_to_jpg(train_dcim_dir, train_dir)
-#convert_all_dcm_to_jpg(test_dcim_dir, test_dir)
+convert_all_dcm_to_jpg(test_dcim_dir, test_dir)
 
 def write_yolo_annotations():
     annotations = pd.read_csv(os.path.join(
@@ -90,9 +90,7 @@ def write_yolo_annotations():
             continue
         bbox_data = row[2:6]
         patientId = row[1]
-        print(bbox_data)
-        print(patientId)
         generate_yolo_labels(label_dir, patientId, bbox_data)
 
 
-write_yolo_annotations()
+#write_yolo_annotations()
