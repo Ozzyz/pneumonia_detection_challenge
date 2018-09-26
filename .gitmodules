@@ -1,3 +1,6 @@
 [submodule "yolo-model/darknet"]
 	path = yolo-model/darknet
 	url = https://github.com/pjreddie/darknet.git
+[submodule "Mask_RCNN"]
+	path = Mask_RCNN
+	url = git@github.com:matterport/Mask_RCNN.git
