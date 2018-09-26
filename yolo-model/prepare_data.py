@@ -83,12 +83,15 @@ test_dcim_dir = os.path.join(DATA_DIR, "stage_1_test_images")
 def write_yolo_annotations():
     annotations = pd.read_csv(os.path.join(
         DATA_DIR, "stage_1_train_labels.csv"))
-    for row in annotations.iterrows():  # Skip header row
-        # patientId, x, y, width, height, target
-        if row['target'] == 0:  # Skip patients that have no lung densities
+    for row in annotations.itertuples():  # Skip header row
+        print(row)
+        # index, patientId, x, y, width, height, target
+        if row[6] == 0:  # Skip patients that have no lung densities
             continue
-        bbox_data = row.iloc[1, 2, 3, 4]
-        patientId = row.iloc[0]
+        bbox_data = row[2:6]
+        patientId = row[1]
+        print(bbox_data)
+        print(patientId)
         generate_yolo_labels(label_dir, patientId, bbox_data)
 
 
