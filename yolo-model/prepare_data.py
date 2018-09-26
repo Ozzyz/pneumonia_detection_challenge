@@ -1,3 +1,4 @@
+import pandas as pd
 import pydicom
 import os
 import cv2
@@ -88,8 +89,9 @@ test_dcim_dir = os.path.join(DATA_DIR, "stage_1_test_images")
 
 def write_yolo_annotations():
     annotations = pd.read_csv(os.path.join(DATA_DIR, "stage_1_train_labels.csv"))
-    for row in annotations.values[1:]: # Skip header row
+    for row in annotations.iterrows(): # Skip header row
         # patientId, x, y, width, height, target
+        print(row)
         if row[5] == 0: # Skip patients that have no lung densities
             continue 
         bbox_data = row[1:4]
