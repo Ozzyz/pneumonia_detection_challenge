@@ -1,0 +1,4 @@
+classes=1
+train = data/train.list
+valid = data/test.list
+labels = labels/
