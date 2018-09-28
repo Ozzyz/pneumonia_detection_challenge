@@ -2,7 +2,7 @@
 ### System updates ###
 apt-get update
 apt-get install -y vim
-
+apt-get install libopencv-dev
 
 pip install --upgrade pip
 ### DATA DOWNLOAD ###
