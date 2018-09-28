@@ -8,6 +8,8 @@ from config import DetectorConfig, InferenceConfig
 import cv2
 import matplotlib.pyplot as plt
 
+visualize = False
+
 # Root directory of the project
 ROOT_DIR = os.path.abspath('./')
 
@@ -49,6 +51,7 @@ def parse_dataset(dicom_dir, anns):
 
 
 def run():
+	print(visualize)
 	# select trained model
 	dir_names = next(os.walk(MODEL_DIR))[1]
 	print(MODEL_DIR)
@@ -83,8 +86,8 @@ def run():
 
 	# Recreate the model in inference mode
 	model = modellib.MaskRCNN(mode='inference',
-							  config=inference_config,
-							  model_dir=MODEL_DIR)
+							config=inference_config,
+							model_dir=MODEL_DIR)
 
 	# Load trained weights (fill in path to trained weights here)
 	assert model_path != "", "Provide path to trained weights"
@@ -145,18 +148,23 @@ def predict(model, image_fps, filepath='sample_submission.csv', min_conf=0.9):
 						width = r['rois'][i][3] - x1
 						height = r['rois'][i][2] - y1
 						bboxes_str = "{} {} {} {}".format(x1 * resize_factor, y1 * resize_factor,
-														  width * resize_factor, height * resize_factor)
+														width * resize_factor, height * resize_factor)
 						out_str += bboxes_str
 
-						cv2.rectangle(image, (x1, y1), (width, height), (0, 255, 0), 2)
+						if visualize:
+							cv2.rectangle(image, (x1, y1), (width, height), (0, 255, 0), 2)
 
-				plt.imshow(image)
-				#plt.show()
-				plt.pause(0.01)
+				if visualize:
+					plt.imshow(image)
+					#plt.show()
+					plt.pause(0.01)
 
 			file.write(out_str + "\n")
 
 
 if __name__ == "__main__":
+	for arg in sys.argv[1:]:
+		if arg.lower() == 'visualize':
+			visualize = True
 	print("ROOT_DIR: ", ROOT_DIR)
 	run()
