@@ -25,7 +25,7 @@ os.chdir(ROOT_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'Mask_RCNN'))
 import mrcnn.model as modellib
 
-test_dicom_dir = os.path.join(ROOT_DIR, 'data/stage_1_test_images')
+test_dicom_dir = os.path.join(ROOT_DIR, 'data', 'stage_1_test_images')
 
 # Original DICOM image size: 1024 x 1024
 ORIG_SIZE = 1024
@@ -35,8 +35,8 @@ print(config.display())
 
 def get_dicom_fps(dicom_dir):
 	print(dicom_dir)
-	print(dicom_dir + '/' + '*.dcm')
-	dicom_fps = glob.glob(dicom_dir + '/' + '*.dcm')
+	print(os.path.join(dicom_dir, '*.dcm'))
+	dicom_fps = glob.glob(os.path.join(dicom_dir, '*.dcm'))
 	return list(set(dicom_fps))
 
 
@@ -132,7 +132,6 @@ def predict(model, image_fps, filepath='sample_submission.csv', min_conf=0.9):
 			out_str += patient_id + ","
 			assert (len(r['rois']) == len(r['class_ids']) == len(r['scores']))
 			if len(r['rois']) == 0:
-				print("Predicted empty")
 				pass
 			else:
 				num_instances = len(r['rois'])

@@ -15,5 +15,3 @@ pip install -r requirements.txt
 python setup.py install
 cd ..
 pip install -r requirements.txt
-#python run.py
-python main.py stage_1_train_images/ stage_1_test_images/ stage_1_training_labels.csv
