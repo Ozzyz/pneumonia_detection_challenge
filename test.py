@@ -99,7 +99,7 @@ def run(filepath, is_gt):
     # Get filenames of test dataset DICOM images
     test_image_fps = get_dicom_fps(test_dicom_dir)
     # Write predictions to file
-    predict(model, test_image_fps, filepath=filepath, is_gt)
+    predict(model, test_image_fps, filepath=filepath, is_gt=is_gt)
 
 
 def get_colors_for_class_ids(class_ids):
@@ -120,10 +120,11 @@ def predict(model, image_fps, filepath='sample_submission.csv', min_conf=0.9, is
 
     print("Predicting with resize-factor : ", resize_factor)
     with open(filepath, filemode) as file:
+        lines = file.readlines()
+        print("Reading file: ", filepath, len(lines))
         for image_id in tqdm(image_fps):
             ds = pydicom.read_file(image_id)
             image = ds.pixel_array
-
             # If grayscale. Convert to RGB for consistency.
             if len(image.shape) != 3 or image.shape[2] != 3:
                 image = np.stack((image,) * 3, -1)
@@ -159,23 +160,32 @@ def predict(model, image_fps, filepath='sample_submission.csv', min_conf=0.9, is
                         cv2.rectangle(image, (x1, y1),
                                       (width, height), (0, 0, 255), 2)
 
-            bboxes = extract_bboxes(patient_id, file)
+            bboxes = extract_bboxes(patient_id, lines)
             # Draw all ground truth bounding boxes
             if is_gt and visualize:
                 for x, y, w, h in bboxes:
                     cv2.rectangle(image, (x, y),
                                   (w, h), (0, 255, 0), 2)
             if visualize:
-                plt.imshow(image)
+                # plt.imshow(image)
                 # plt.show()
-                plt.pause(0.01)
+                # plt.pause(0.01)
+                filename = image_id.split('/')[-1]
+                filename = filename.replace('dcm', 'jpg')
+                # print(filename)
+                plt.imsave(os.path.join(
+                    ROOT_DIR, 'train_output', filename), image)
 
-            file.write(out_str + "\n")
+            if not is_gt:
+                file.write(out_str + "\n")
 
 
-def extract_bboxes(patientid, file):
+def extract_bboxes(patientid, filelines):
+    print(patientid)
+    print(filelines)
     bboxes = []
-    for line in file.readlines():
+    for line in filelines:
+        print("Reading line ", line)
         if patientid in line:
 			all_entries = line.split(",")
             _, predictionstring, coords, target = all_entries[0], all_entries[1], all_entries[2:-2], all_entries[-1]
