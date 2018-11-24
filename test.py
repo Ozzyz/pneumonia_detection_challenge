@@ -166,9 +166,13 @@ def predict(model, image_fps, filepath='sample_submission.csv', min_conf=0.9, is
                     cv2.rectangle(image, (x, y),
                                   (w, h), (0, 255, 0), 2)
             if visualize:
-                plt.imshow(image)
+                #plt.imshow(image)
                 # plt.show()
-                plt.pause(0.01)
+                #plt.pause(0.01)
+		filename = image_id.split('/')[-1]
+		filename = filename.replace('dcm', 'jpg')
+		#print(filename)
+		plt.imsave(os.path.join(ROOT_DIR, 'train_output', filename), image)
 
             file.write(out_str + "\n")
 
