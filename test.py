@@ -25,7 +25,7 @@ os.chdir(ROOT_DIR)
 sys.path.append(os.path.join(ROOT_DIR, 'Mask_RCNN'))
 import mrcnn.model as modellib
 
-test_dicom_dir = os.path.join(ROOT_DIR, 'data', 'stage_1_test_images')
+test_dicom_dir = os.path.join(ROOT_DIR, 'data', 'stage_2_test_images')
 
 # Original DICOM image size: 1024 x 1024
 ORIG_SIZE = 1024
@@ -154,9 +154,13 @@ def predict(model, image_fps, filepath='sample_submission.csv', min_conf=0.9):
 							cv2.rectangle(image, (x1, y1), (width, height), (0, 255, 0), 2)
 
 				if visualize:
-					plt.imshow(image)
+					#plt.imshow(image)
 					#plt.show()
-					plt.pause(0.01)
+					#plt.pause(0.01)
+					filename = image_id.split('/')[-1]
+					filename = filename.replace('dcm', 'jpg')
+					#print(filename)
+					plt.imsave(os.path.join(ROOT_DIR, 'output', filename), image)
 
 			file.write(out_str + "\n")
 

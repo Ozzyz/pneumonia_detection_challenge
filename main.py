@@ -34,8 +34,8 @@ sys.path.append(os.path.join(ROOT_DIR, 'Mask_RCNN'))
 import mrcnn.model as modellib
 from mrcnn.model import log
 
-train_dicom_dir = os.path.join(ROOT_DIR, 'stage_1_train_images')
-test_dicom_dir = os.path.join(ROOT_DIR, 'stage_1_test_images')
+train_dicom_dir = os.path.join(ROOT_DIR, 'data',  'stage_1_train_images')
+test_dicom_dir = os.path.join(ROOT_DIR, 'data',  'stage_1_test_images')
 
 # Original DICOM image size: 1024 x 1024
 ORIG_SIZE = 1024
@@ -61,7 +61,7 @@ def parse_dataset(dicom_dir, anns):
 def run():
 
     # training dataset
-    anns = pd.read_csv(os.path.join(ROOT_DIR, 'stage_1_train_labels.csv'))
+    anns = pd.read_csv(os.path.join(ROOT_DIR, 'data', 'stage_1_train_labels.csv'))
     print(anns.head(6))
 
     image_fps, image_annotations = parse_dataset(train_dicom_dir, anns=anns)
@@ -114,7 +114,7 @@ def run():
         iaa.Multiply((0.9, 1.1))
     ])
 
-    NUM_EPOCHS = 20
+    NUM_EPOCHS = 200
 
     # Train Mask-RCNN Model
     import warnings
