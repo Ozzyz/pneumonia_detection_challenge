@@ -8,6 +8,7 @@ import glob
 from config import DetectorConfig, InferenceConfig
 import cv2
 import matplotlib.pyplot as plt
+import logging
 
 visualize = False
 
@@ -50,7 +51,7 @@ def parse_dataset(dicom_dir, anns):
     return image_fps, image_annotations
 
 
-def run():
+def run(filepath):
     print(visualize)
     # select trained model
     dir_names = next(os.walk(MODEL_DIR))[1]
@@ -97,7 +98,7 @@ def run():
     # Get filenames of test dataset DICOM images
     test_image_fps = get_dicom_fps(test_dicom_dir)
     # Write predictions to file
-    predict(model, test_image_fps, filepath="actual_submission_newest.csv")
+    predict(model, test_image_fps, filepath=filepath)
 
 
 def get_colors_for_class_ids(class_ids):
@@ -108,13 +109,16 @@ def get_colors_for_class_ids(class_ids):
     return colors
 
 
-def predict(model, image_fps, filepath='sample_submission.csv', min_conf=0.9):
+def predict(model, image_fps, filepath='sample_submission.csv', min_conf=0.9, is_gt=False):
     """ Makes predictions on test images, write out sample submission"""
     # assume square image
     # resize_factor = ORIG_SIZE / config.IMAGE_SHAPE[0]
     resize_factor = 1
+    # If we have ground truth, we want to read it - if not we want to write submission
+    filemode = 'r' if is_gt else 'w'
+
     print("Predicting with resize-factor : ", resize_factor)
-    with open(filepath, 'w') as file:
+    with open(filepath, filemode) as file:
         for image_id in tqdm(image_fps):
             ds = pydicom.read_file(image_id)
             image = ds.pixel_array
@@ -132,34 +136,61 @@ def predict(model, image_fps, filepath='sample_submission.csv', min_conf=0.9):
             out_str += patient_id + ","
             assert (len(r['rois']) == len(r['class_ids']) == len(r['scores']))
             if len(r['rois']) == 0:
-                pass
-            else:
-                num_instances = len(r['rois'])
-                for i in range(num_instances):
-                    if r['scores'][i] > min_conf:
-                        out_str += ' '
-                        out_str += str(round(r['scores'][i], 2))
-                        out_str += ' '
+                continue
 
-                        # x1, y1, width, height
-                        x1 = r['rois'][i][1]
-                        y1 = r['rois'][i][0]
-                        width = r['rois'][i][3] - x1
-                        height = r['rois'][i][2] - y1
-                        bboxes_str = "{} {} {} {}".format(x1 * resize_factor, y1 * resize_factor,
-                                                          width * resize_factor, height * resize_factor)
-                        out_str += bboxes_str
+            num_instances = len(r['rois'])
+            for i in range(num_instances):
+                if r['scores'][i] > min_conf:
+                    out_str += ' '
+                    out_str += str(round(r['scores'][i], 2))
+                    out_str += ' '
 
-                        if visualize:
-                            cv2.rectangle(image, (x1, y1),
-                                          (width, height), (0, 255, 0), 2)
+                    # x1, y1, width, height
+                    x1 = r['rois'][i][1]
+                    y1 = r['rois'][i][0]
+                    width = r['rois'][i][3] - x1
+                    height = r['rois'][i][2] - y1
+                    bboxes_str = "{} {} {} {}".format(x1 * resize_factor, y1 * resize_factor,
+                                                      width * resize_factor, height * resize_factor)
+                    out_str += bboxes_str
 
-                if visualize:
-                    plt.imshow(image)
-                    # plt.show()
-                    plt.pause(0.01)
+                    if visualize:
+                        cv2.rectangle(image, (x1, y1),
+                                      (width, height), (0, 0, 255), 2)
+
+            bboxes = extract_bboxes(patient_id, file)
+            # Draw all ground truth bounding boxes
+            if is_gt and visualize:
+                for x, y, w, h in bboxes:
+                    cv2.rectangle(image, (x, y),
+                                  (w, h), (0, 255, 0), 2)
+            if visualize:
+                plt.imshow(image)
+                # plt.show()
+                plt.pause(0.01)
 
             file.write(out_str + "\n")
+
+
+def extract_bboxes(patientid, file):
+    bboxes = []
+    for line in file.readlines():
+        if patientid in line:
+            _, predictionstring = line.split(",")
+            for coords in split_predstring(predictionstring):
+                bboxes.append(coords)
+    logging.info("Extraced bboxes {}".format(bboxes))
+    return bboxes
+
+
+def split_predstring(predstring):
+    # Each prediction string is separated by a whitespace, but may contain
+    # many bboxes x y w h x y w h
+    coords = predstring.split(" ")
+    assert len(
+        coords) % 4 == 0, "Error - failed loading pred string - are you sure it is correctly formatted?"
+    for i in range(len(coords) / 4):
+        yield coords[i*4], coords[i*4 + 1], coords[i*4 + 2], coords[i*4 + 3]
 
 
 def draw(data):
