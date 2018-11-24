@@ -51,7 +51,7 @@ def parse_dataset(dicom_dir, anns):
     return image_fps, image_annotations
 
 
-def run(filepath):
+def run(filepath, is_gt):
     # FIlepath: Path to write file csv for test, else path to gt csv
     print(visualize)
     # select trained model
@@ -99,7 +99,7 @@ def run(filepath):
     # Get filenames of test dataset DICOM images
     test_image_fps = get_dicom_fps(test_dicom_dir)
     # Write predictions to file
-    predict(model, test_image_fps, filepath=filepath)
+    predict(model, test_image_fps, filepath=filepath, is_gt)
 
 
 def get_colors_for_class_ids(class_ids):
@@ -241,7 +241,9 @@ if __name__ == "__main__":
     parser.add_argument('--visualize', help='whether or not to visualize')
     parser.add_argument(
         '--fp', help='Path to output file if test, else to gt file')
+    parser.add_argument(
+        '--groundtruth', help='1 if grondtruth, else test', type=int)
     args = parser.parse_args()
     if args.visualize:
         visualize = True
-    run(args.fp)
+    run(args.fp, args.groundtruth)
