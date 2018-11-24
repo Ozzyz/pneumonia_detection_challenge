@@ -26,7 +26,7 @@ os.chdir(ROOT_DIR)
 # To find local version of the library
 sys.path.append(os.path.join(ROOT_DIR, 'Mask_RCNN'))
 
-test_dicom_dir = os.path.join(ROOT_DIR, 'data', 'stage_1_test_images')
+test_dicom_dir = os.path.join(ROOT_DIR, 'data', 'stage_1_train_images')
 
 # Original DICOM image size: 1024 x 1024
 ORIG_SIZE = 1024
@@ -52,6 +52,7 @@ def parse_dataset(dicom_dir, anns):
 
 
 def run(filepath):
+    # FIlepath: Path to write file csv for test, else path to gt csv
     print(visualize)
     # select trained model
     dir_names = next(os.walk(MODEL_DIR))[1]
@@ -235,8 +236,12 @@ def overlay_box(im, box, rgb, stroke=1):
 
 
 if __name__ == "__main__":
-    for arg in sys.argv[1:]:
-        if arg.lower() == 'visualize':
-            visualize = True
-    print("ROOT_DIR: ", ROOT_DIR)
-    run()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--visualize', help='whether or not to visualize')
+    parser.add_argument(
+        '--fp', help='Path to output file if test, else to gt file')
+    args = parser.parse_args()
+    if args.visualize:
+        visualize = True
+    run(args.fp)
