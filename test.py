@@ -177,17 +177,19 @@ def extract_bboxes(patientid, file):
     bboxes = []
     for line in file.readlines():
         if patientid in line:
-            _, predictionstring = line.split(",")
+			all_entries = line.split(",")
+            _, predictionstring, coords, target = all_entries[0], all_entries[1], all_entries[2:-2], all_entries[-1]
+			if '' in coords: # No predictions:
+				return []
             for coords in split_predstring(predictionstring):
                 bboxes.append(coords)
     logging.info("Extraced bboxes {}".format(bboxes))
     return bboxes
 
 
-def split_predstring(predstring):
+def split_predstring(coords):
     # Each prediction string is separated by a whitespace, but may contain
     # many bboxes x y w h x y w h
-    coords = predstring.split(" ")
     assert len(
         coords) % 4 == 0, "Error - failed loading pred string - are you sure it is correctly formatted?"
     for i in range(len(coords) / 4):
