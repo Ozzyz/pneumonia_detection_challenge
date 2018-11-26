@@ -158,14 +158,14 @@ def predict(model, image_fps, filepath='sample_submission.csv', min_conf=0.9, is
 
                     if visualize:
                         cv2.rectangle(image, (x1, y1),
-                                      (width, height), (0, 0, 255), 2)
+                                      (x1+width, y1+height), (0, 0, 255), 2)
 
-            bboxes = extract_bboxes(patient_id, lines)
             # Draw all ground truth bounding boxes
             if is_gt and visualize:
+                bboxes = extract_bboxes(patient_id, lines)
                 for x, y, w, h in bboxes:
                     cv2.rectangle(image, (x, y),
-                                  (w, h), (0, 255, 0), 2)
+                                  (x+w, y+h), (0, 255, 0), 2)
             if visualize:
                 # plt.imshow(image)
                 # plt.show()
@@ -182,29 +182,18 @@ def predict(model, image_fps, filepath='sample_submission.csv', min_conf=0.9, is
 
 def extract_bboxes(patientid, filelines):
     print(patientid)
-    print(filelines)
     bboxes = []
     for line in filelines:
-        print("Reading line ", line)
         if patientid in line:
-			all_entries = line.split(",")
-            _, predictionstring, coords, target = all_entries[0], all_entries[1], all_entries[2:-2], all_entries[-1]
-			if '' in coords: # No predictions:
-				return []
-            for coords in split_predstring(predictionstring):
-                bboxes.append(coords)
+            all_entries = line.split(",")
+            _, coords, target = all_entries[0], all_entries[1:-1], all_entries[-1]
+            if '' in coords: # No predictions:
+                return []
+            print(all_entries)
+            print(coords)
+            bboxes.append([int(float(x)) for x in coords])
     logging.info("Extraced bboxes {}".format(bboxes))
     return bboxes
-
-
-def split_predstring(coords):
-    # Each prediction string is separated by a whitespace, but may contain
-    # many bboxes x y w h x y w h
-    assert len(
-        coords) % 4 == 0, "Error - failed loading pred string - are you sure it is correctly formatted?"
-    for i in range(len(coords) / 4):
-        yield coords[i*4], coords[i*4 + 1], coords[i*4 + 2], coords[i*4 + 3]
-
 
 def draw(data):
     """
