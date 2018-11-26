@@ -1,0 +1,5 @@
+classes=1
+train = /root/yolo-model/data/train.list
+valid = /root/yolo-model/data/test.list
+names = /root/yolo-model/data/pneumonia.names
+backup = /root/yolo-model/backup

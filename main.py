@@ -58,7 +58,6 @@ def parse_dataset(dicom_dir, anns):
 
 
 def run():
-
 	# training dataset
 	anns = pd.read_csv(os.path.join(ROOT_DIR, 'data', 'stage_1_train_labels.csv'))
 	print(anns.head(6))

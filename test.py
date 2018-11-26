@@ -25,8 +25,9 @@ os.chdir(ROOT_DIR)
 # Import Mask RCNN
 # To find local version of the library
 sys.path.append(os.path.join(ROOT_DIR, 'Mask_RCNN'))
+import mrcnn.model as modellib
 
-test_dicom_dir = os.path.join(ROOT_DIR, 'data', 'stage_1_train_images')
+test_dicom_dir = os.path.join(ROOT_DIR, 'data', 'stage_2_test_images')
 
 # Original DICOM image size: 1024 x 1024
 ORIG_SIZE = 1024
