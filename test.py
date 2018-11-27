@@ -79,7 +79,7 @@ def run(filepath, is_gt):
         if not checkpoints:
             print('No weight files in {}'.format(dir_name))
         else:
-            checkpoint = os.path.join(dir_name, checkpoints[-1])
+            checkpoint = os.path.join(dir_name, checkpoints[-51])
             fps.append(checkpoint)
 
     model_path = sorted(fps)[-1]
