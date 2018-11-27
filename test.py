@@ -89,8 +89,8 @@ def run(filepath, is_gt):
 
     # Recreate the model in inference mode
     model = modellib.MaskRCNN(mode='inference',
-                              config=inference_config,
-                              model_dir=MODEL_DIR)
+                            config=inference_config,
+                            model_dir=MODEL_DIR)
 
     # Load trained weights (fill in path to trained weights here)
     assert model_path != "", "Provide path to trained weights"
@@ -120,65 +120,68 @@ def predict(model, image_fps, filepath='sample_submission.csv', min_conf=0.9, is
     filemode = 'r' if is_gt else 'w'
 
     print("Predicting with resize-factor : ", resize_factor)
-    with open(filepath, filemode) as file:
-        lines = file.readlines()
-        print("Reading file: ", filepath, len(lines))
-        for image_id in tqdm(image_fps):
-            ds = pydicom.read_file(image_id)
-            image = ds.pixel_array
-            # If grayscale. Convert to RGB for consistency.
-            if len(image.shape) != 3 or image.shape[2] != 3:
-                image = np.stack((image,) * 3, -1)
+    
+    if is_gt and visualize:
+        with open(filepath, filemode) as file:
+            lines = file.readlines()
+            print("Reading file: ", filepath, len(lines))
+            
+    for image_id in tqdm(image_fps):
+        ds = pydicom.read_file(image_id)
+        image = ds.pixel_array
+        # If grayscale. Convert to RGB for consistency.
+        if len(image.shape) != 3 or image.shape[2] != 3:
+            image = np.stack((image,) * 3, -1)
 
-            patient_id = os.path.splitext(os.path.basename(image_id))[0]
+        patient_id = os.path.splitext(os.path.basename(image_id))[0]
 
-            results = model.detect([image])
-            r = results[0]
+        results = model.detect([image])
+        r = results[0]
 
-            out_str = ""
-            out_str += patient_id + ","
-            assert (len(r['rois']) == len(r['class_ids']) == len(r['scores']))
-            if len(r['rois']) == 0:
-                continue
+        out_str = ""
+        out_str += patient_id + ","
+        assert (len(r['rois']) == len(r['class_ids']) == len(r['scores']))
+        if len(r['rois']) == 0:
+            continue
 
-            num_instances = len(r['rois'])
-            for i in range(num_instances):
-                if r['scores'][i] > min_conf:
-                    out_str += ' '
-                    out_str += str(round(r['scores'][i], 2))
-                    out_str += ' '
+        num_instances = len(r['rois'])
+        for i in range(num_instances):
+            if r['scores'][i] > min_conf:
+                out_str += ' '
+                out_str += str(round(r['scores'][i], 2))
+                out_str += ' '
 
-                    # x1, y1, width, height
-                    x1 = r['rois'][i][1]
-                    y1 = r['rois'][i][0]
-                    width = r['rois'][i][3] - x1
-                    height = r['rois'][i][2] - y1
-                    bboxes_str = "{} {} {} {}".format(x1 * resize_factor, y1 * resize_factor,
-                                                      width * resize_factor, height * resize_factor)
-                    out_str += bboxes_str
+                # x1, y1, width, height
+                x1 = r['rois'][i][1]
+                y1 = r['rois'][i][0]
+                width = r['rois'][i][3] - x1
+                height = r['rois'][i][2] - y1
+                bboxes_str = "{} {} {} {}".format(x1 * resize_factor, y1 * resize_factor,
+                                                width * resize_factor, height * resize_factor)
+                out_str += bboxes_str
 
-                    if visualize:
-                        cv2.rectangle(image, (x1, y1),
-                                      (x1+width, y1+height), (0, 0, 255), 2)
+                if visualize:
+                    cv2.rectangle(image, (x1, y1),
+                                (x1+width, y1+height), (0, 0, 255), 2)
 
-            # Draw all ground truth bounding boxes
-            if is_gt and visualize:
-                bboxes = extract_bboxes(patient_id, lines)
-                for x, y, w, h in bboxes:
-                    cv2.rectangle(image, (x, y),
-                                  (x+w, y+h), (0, 255, 0), 2)
-            if visualize:
-                # plt.imshow(image)
-                # plt.show()
-                # plt.pause(0.01)
-                filename = image_id.split('/')[-1]
-                filename = filename.replace('dcm', 'jpg')
-                # print(filename)
-                plt.imsave(os.path.join(
-                    ROOT_DIR, 'train_output', filename), image)
+        # Draw all ground truth bounding boxes
+        if is_gt and visualize:
+            bboxes = extract_bboxes(patient_id, lines)
+            for x, y, w, h in bboxes:
+                cv2.rectangle(image, (x, y),
+                            (x+w, y+h), (0, 255, 0), 2)
+        if visualize:
+            # plt.imshow(image)
+            # plt.show()
+            # plt.pause(0.01)
+            filename = image_id.split('/')[-1]
+            filename = filename.replace('dcm', 'jpg')
+            # print(filename)
+            plt.imsave(os.path.join(
+                ROOT_DIR, 'train_output', filename), image)
 
-            if not is_gt:
-                file.write(out_str + "\n")
+        if not is_gt:
+            file.write(out_str + "\n")
 
 
 def extract_bboxes(patientid, filelines):
